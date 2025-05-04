@@ -4,15 +4,16 @@ static class Downloader
 {
     public static void Download(DownloadConfig config)
     {
-        string args = GetArgs(config.ArgsPath, config.OutputDirectory, config.PlaylistLink);
+        PathConfig pathConfig = config.PathConfig;
 
-        ProcessProxy.Run(config.YtdlpPath, args);
+        string args = GetArgs(pathConfig.YtdlpConfigPath, pathConfig.FFmpegPath, 
+                              config.OutputDirectory, config.PlaylistLink);
+
+        ProcessProxy.Run(pathConfig.YtdlpPath, args);
     }
 
-    private static string GetArgs(string path, string outputDirectory, string playlistLink)
-    {
-        string args = File.ReadAllText(path);
-
-        return args + $" -P \"{outputDirectory}\" " + playlistLink;
-    }
+    private static string GetArgs(string path, string ffmpegPath, string outputDirectory, 
+                                  string playlistLink) 
+        => $"--config-location \"{path}\" --ffmpeg-location \"{ffmpegPath}\" " +
+           $"-P \"{outputDirectory}\" {playlistLink}";
 }

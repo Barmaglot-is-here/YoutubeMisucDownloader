@@ -5,11 +5,8 @@ internal class Program
     static void Main()
     {
     retry:
-        Config config = GetConfig();
-
-        DownloadConfig downloadConfig   = From(ref config);
-        downloadConfig.OutputDirectory  = GetOutputDirectory();
-        downloadConfig.PlaylistLink     = GetPlaylistLink();
+        PathConfig pathConfig           = GetPathConfig();
+        DownloadConfig downloadConfig   = GetDownloadConfig(ref pathConfig);
 
         Console.WriteLine();
         Console.WriteLine("---Downloading---");
@@ -21,9 +18,10 @@ internal class Program
         Console.WriteLine("---Converting---");
         Console.WriteLine();
 
-        List<string> originalFiles = FileFinder.FindAll(downloadConfig.OutputDirectory, ".m4a");
+        List<string> originalFiles = FileFinder.FindAll(downloadConfig.OutputDirectory,
+                                                        ".m4a");
 
-        AudioConvertor.ConvertToMp3(config.FFmpegPath, originalFiles);
+        AudioConverter.ConvertToMp3(pathConfig.FFmpegPath, originalFiles);
 
         Console.ForegroundColor = ConsoleColor.White;
         Console.WriteLine();
@@ -50,19 +48,29 @@ internal class Program
             goto retry;
     }
 
-    private static Config GetConfig()
+    private static PathConfig GetPathConfig()
     {
-        Config config = ConfigurationUtility.LoadOrConfigure();
+        PathConfig config = ConfigurationUtility.LoadOrConfigure();
 
         while (true)
         {
             config.Show();
 
-            if (Utils.Confirm("Continue?"))
+            if (Utils.Confirm("Confirm?"))
                 return config;
             else
                 config = ConfigurationUtility.ConfigureAndSave();
         }
+    }
+
+    private static DownloadConfig GetDownloadConfig(ref PathConfig pathConfig)
+    {
+        DownloadConfig downloadConfig   = new();
+        downloadConfig.PathConfig       = pathConfig;
+        downloadConfig.OutputDirectory  = GetOutputDirectory();
+        downloadConfig.PlaylistLink     = GetPlaylistLink();
+
+        return downloadConfig;
     }
 
     private static string GetOutputDirectory()
@@ -78,16 +86,6 @@ internal class Program
 
     private static string GetPlaylistLink() => Utils.GetNotNullString("Enter playlist link",
                                                                       "Link is null");
-
-    private static DownloadConfig From(ref Config config)
-    {
-        DownloadConfig downloadConfig   = new();
-        downloadConfig.YtdlpPath        = config.YtdlpPath;
-        downloadConfig.ArgsPath         = config.DownloadArgsPath;
-
-        return downloadConfig;
-    }
-
     private static void Delete(List<string> oldFiles)
     {
         foreach (string file in oldFiles)

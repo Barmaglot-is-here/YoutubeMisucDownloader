@@ -6,6 +6,7 @@ static class Utils
     {
         while (true)
         {
+            Console.WriteLine();
             Console.WriteLine(message);
             string? link = Console.ReadLine();
 
